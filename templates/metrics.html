@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Выбор метрик — {{ dataset.filename }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <a href="/projects/{{ project.id }}/upload" class="back-link">← Назад</a>
+    <h1>Выберите метрики для анализа</h1>
+    <p class="page-subtitle">{{ dataset.filename }} — {{ dataset.row_count }} строк</p>
+</div>
+
+<form method="post" action="/projects/{{ project.id }}/datasets/{{ dataset.id }}/calculate">
+    {% for group_name, group_metrics in metrics_groups.items() %}
+    <div class="card metrics-group">
+        <h3 class="group-title">{{ group_name }}</h3>
+        {% for metric_key in group_metrics %}
+        <label class="metric-checkbox">
+            <input type="checkbox" name="metrics" value="{{ metric_key }}">
+            <span class="checkbox-custom"></span>
+            <span class="metric-label">{{ metrics_labels[metric_key] }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="card selected-summary" id="summary">
+        <span id="selected-count">Выбрано метрик: 0</span>
+        <button type="submit" class="btn btn-primary" id="calc-btn" disabled>
+            Вычислить метрики →
+        </button>
+    </div>
+</form>
+
+<script>
+const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+const countEl = document.getElementById('selected-count');
+const calcBtn = document.getElementById('calc-btn');
+
+checkboxes.forEach(cb => {
+    cb.addEventListener('change', () => {
+        const count = [...checkboxes].filter(c => c.checked).length;
+        countEl.textContent = 'Выбрано метрик: ' + count;
+        calcBtn.disabled = count === 0;
+    });
+});
+</script>
+{% endblock %}

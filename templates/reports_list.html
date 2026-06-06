@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Отчёты — {{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <a href="/projects" class="back-link">← Проекты</a>
+    <h1>Отчёты проекта «{{ project.name }}»</h1>
+</div>
+
+{% if reports %}
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr><th>Датасет</th><th>Метрики</th><th>Дата</th><th>Действие</th></tr>
+        </thead>
+        <tbody>
+        {% for report in reports %}
+        <tr>
+            <td>{{ datasets[report.dataset_id | string].filename if report.dataset_id | string in datasets else '—' }}</td>
+            <td>{{ report.metrics | join(', ') }}</td>
+            <td>{{ report.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>
+                <a href="/projects/{{ project.id }}/reports/{{ report.id }}"
+                   class="btn btn-secondary btn-sm">Открыть</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state card">
+    <p>Отчётов пока нет.</p>
+    <a href="/projects/{{ project.id }}/upload" class="btn btn-primary">Загрузить данные</a>
+</div>
+{% endif %}
+{% endblock %}

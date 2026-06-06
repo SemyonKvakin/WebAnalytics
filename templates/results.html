@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Результаты — {{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+    <a href="/projects/{{ project.id }}/upload" class="back-link">← Назад</a>
+    <h1>Результаты анализа</h1>
+    <p class="page-subtitle">{{ dataset.filename }} · {{ report.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+</div>
+
+<div class="kpi-grid">
+{% for metric, data in results.items() %}
+    {% if data is mapping and 'error' not in data %}
+    <div class="kpi-card">
+        <div class="kpi-label">{{ data.get('label', metric) }}</div>
+        {% if data.get('value') is not none %}
+            <div class="kpi-value">{{ data.value }}</div>
+        {% elif data.get('total') is not none %}
+            <div class="kpi-value">{{ data.total }}</div>
+        {% elif data.get('ratio_pct') is not none %}
+            <div class="kpi-value">{{ data.ratio_pct }}%</div>
+        {% elif data.get('rate_pct') is not none %}
+            <div class="kpi-value">{{ data.rate_pct }}%</div>
+        {% elif data.get('average') is not none %}
+            <div class="kpi-value">{{ data.average }}%</div>
+        {% endif %}
+    </div>
+    {% elif data is mapping and 'error' in data %}
+    <div class="kpi-card kpi-error">
+        <div class="kpi-label">{{ metric }}</div>
+        <div class="kpi-error-msg">{{ data.error }}</div>
+    </div>
+    {% endif %}
+{% endfor %}
+</div>
+
+<!-- Charts -->
+<div class="charts-grid">
+{% if results.get('revenue') and results.revenue.get('monthly') %}
+<div class="card chart-card">
+    <h3>Revenue по месяцам</h3>
+    <canvas id="chart-revenue"></canvas>
+</div>
+{% endif %}
+
+{% if results.get('retention') and results.retention.get('monthly_avg') %}
+<div class="card chart-card">
+    <h3>Retention Rate (%)</h3>
+    <canvas id="chart-retention"></canvas>
+</div>
+{% endif %}
+
+{% if results.get('churn') and results.churn.get('monthly') %}
+<div class="card chart-card">
+    <h3>Churn Rate (%)</h3>
+    <canvas id="chart-churn"></canvas>
+</div>
+{% endif %}
+
+{% if results.get('dau_mau') and results.dau_mau.get('ratio_pct') %}
+<div class="card chart-card">
+    <h3>DAU / MAU</h3>
+    <canvas id="chart-daumau"></canvas>
+</div>
+{% endif %}
+</div>
+
+<!-- Export -->
+<div class="export-bar">
+    <a href="/projects/{{ project.id }}/reports/{{ report.id }}/export/csv"
+       class="btn btn-secondary">⬇ Экспорт в CSV</a>
+    <a href="/projects/{{ project.id }}/reports" class="btn btn-secondary">Все отчёты</a>
+</div>
+
+<script>
+const DATA = {{ results_json | safe }};
+
+function makeChart(id, type, labels, values, label, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: type,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: values,
+                backgroundColor: color + '33',
+                borderColor: color,
+                borderWidth: 2,
+                fill: type === 'line',
+                tension: 0.3,
+                pointRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: type !== 'doughnut' ? {
+                y: { beginAtZero: true }
+            } : {}
+        }
+    });
+}
+
+// Revenue
+if (DATA.revenue && DATA.revenue.monthly) {
+    const m = DATA.revenue.monthly;
+    makeChart('chart-revenue', 'line', Object.keys(m), Object.values(m), 'Revenue', '#2980b9');
+}
+
+// Retention
+if (DATA.retention && DATA.retention.monthly_avg) {
+    const m = DATA.retention.monthly_avg;
+    makeChart('chart-retention', 'bar', Object.keys(m), Object.values(m), 'Retention %', '#27ae60');
+}
+
+// Churn
+if (DATA.churn && DATA.churn.monthly) {
+    const m = DATA.churn.monthly;
+    makeChart('chart-churn', 'bar', Object.keys(m), Object.values(m), 'Churn %', '#e74c3c');
+}
+
+// DAU/MAU doughnut
+if (DATA.dau_mau && DATA.dau_mau.ratio_pct) {
+    const ctx = document.getElementById('chart-daumau');
+    if (ctx) {
+        const ratio = DATA.dau_mau.ratio_pct;
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['DAU/MAU', 'Остаток'],
+                datasets: [{
+                    data: [ratio, 100 - ratio],
+                    backgroundColor: ['#2980b9', '#ecf0f1'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: { label: ctx => ctx.label + ': ' + ctx.parsed + '%' }
+                    }
+                }
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

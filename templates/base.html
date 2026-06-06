@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MetricsApp{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+{% if user %}
+<nav class="navbar">
+    <div class="navbar-brand">📊 MetricsApp</div>
+    <div class="navbar-links">
+        <a href="/projects">Проекты</a>
+        {% if user.role == "admin" %}
+        <a href="/admin/users">Пользователи</a>
+        {% endif %}
+        <span class="navbar-role role-{{ user.role }}">{{ user.role }}</span>
+        <span class="navbar-email">{{ user.email }}</span>
+        <a href="/logout" class="btn-logout">Выйти</a>
+    </div>
+</nav>
+{% endif %}
+
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <p>MetricsApp — анализ бизнес-метрик</p>
+</footer>
+</body>
+</html>
