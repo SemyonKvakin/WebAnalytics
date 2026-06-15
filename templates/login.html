@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход — MetricsApp</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+    <div class="auth-logo">MetricsApp</div>
+    <p class="auth-subtitle">Аналитика бизнес-метрик</p>
+
+    <div class="tabs">
+        <button class="tab-btn {% if tab != 'register' %}active{% endif %}"
+                onclick="showTab('login', this)">Вход</button>
+        <button class="tab-btn {% if tab == 'register' %}active{% endif %}"
+                onclick="showTab('register', this)">Регистрация</button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div id="tab-login" class="tab-content {% if tab == 'register' %}hidden{% endif %}">
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" name="login" placeholder="Введите логин" required>
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Войти</button>
+        </form>
+    </div>
+
+    <div id="tab-register" class="tab-content {% if tab != 'register' %}hidden{% endif %}">
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="form-group">
+                <label>Логин</label>
+                <input type="text" name="login" placeholder="Только латинские буквы и цифры" required>
+            </div>
+            <div class="form-group">
+                <label>Имя <span class="optional">(необязательно)</span></label>
+                <input type="text" name="first_name" placeholder="Ваше имя">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" name="password" placeholder="Минимум 6 символов" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function showTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.remove('hidden');
+    btn.classList.add('active');
+}
+</script>
+</body>
+</html>
