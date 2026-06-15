@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Выбор метрик — {{ dataset.filename }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('datasets.upload', project_id=project.id) }}" class="back-link">← Назад</a>
+<div class="page-header">
+    <h1>Выберите метрики для анализа</h1>
+    <p class="page-subtitle">{{ dataset.filename }} — {{ dataset.row_count }} строк</p>
+</div>
+
+{% if detected_cols %}
+<div class="card">
+    <div class="card-header">Распознанные столбцы файла</div>
+    {% for col in detected_cols %}
+        <span class="col-tag">{{ col }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="POST">
+    {% for group_name, group_metrics in metrics_groups.items() %}
+    <div class="card metrics-group">
+        <h3 class="group-title">{{ group_name }}</h3>
+        {% for key, label in group_metrics %}
+        <label class="metric-checkbox">
+            <input type="checkbox" name="metrics" value="{{ key }}" class="metric-cb">
+            <span class="metric-label">{{ label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="selected-summary">
+        <span id="selected-count">Выбрано метрик: 0</span>
+        <button type="submit" class="btn btn-primary" id="calc-btn" disabled>
+            Вычислить метрики
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const cbs   = document.querySelectorAll('.metric-cb');
+const count = document.getElementById('selected-count');
+const btn   = document.getElementById('calc-btn');
+cbs.forEach(cb => cb.addEventListener('change', () => {
+    const n = [...cbs].filter(c => c.checked).length;
+    count.textContent = 'Выбрано метрик: ' + n;
+    btn.disabled = n === 0;
+}));
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Отчёты — {{ project.name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('projects.index') }}" class="back-link">← Проекты</a>
+<div class="page-actions">
+    <h1 style="margin-right: 16px;">Отчёты — {{ project.name }}</h1>
+    {% if user.role in ('admin', 'analyst') %}
+    <a href="{{ url_for('datasets.upload', project_id=project.id) }}"
+       class="btn btn-primary">Загрузить данные</a>
+    {% endif %}
+</div>
+
+{% if reports %}
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th width="50">№</th>
+                <th>Датасет</th>
+                <th>Метрики</th>
+                <th width="160">Дата</th>
+                <th width="120">Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in reports %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ datasets[r.dataset_id].filename if r.dataset_id in datasets else '—' }}</td>
+            <td>{{ r.metrics | join(', ') }}</td>
+            <td class="text-muted">{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>
+                <a href="{{ url_for('metrics.report', project_id=project.id, report_id=r.id) }}"
+                   class="btn btn-secondary btn-sm">Открыть</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        Отчётов пока нет.
+        {% if user.role in ('admin', 'analyst') %}
+        <br><a href="{{ url_for('datasets.upload', project_id=project.id) }}">
+            Загрузить данные
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Результаты — {{ project.name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('metrics.reports_list', project_id=project.id) }}" class="back-link">
+    <- Все отчёты
+</a>
+<div class="page-actions">
+    <div>
+        <h1 style="margin-right: 16px;">Результаты анализа</h1>
+        <p class="page-subtitle">
+            {{ dataset.filename }} · {{ report.created_at.strftime('%d.%m.%Y %H:%M') }}
+        </p>
+    </div>
+    <div class="export-bar">
+        <a href="{{ url_for('metrics.export_csv', project_id=project.id, report_id=report.id) }}"
+           class="btn btn-secondary">Экспорт в CSV</a>
+    </div>
+</div>
+
+<!-- KPI-карточки -->
+<div class="kpi-grid">
+{% for metric, data in results.items() %}
+    {% if data is mapping and 'error' not in data and metric != 'retention' %}
+    <div class="kpi-card">
+        <div class="kpi-label">{{ data.get('label', metric) }}</div>
+        {% if data.get('value') is not none %}
+            <div class="kpi-value">{{ data.value }}</div>
+        {% elif data.get('total') is not none and metric == 'revenue' %}
+            <div class="kpi-value">{{ data.total }}</div>
+        {% elif data.get('ratio_pct') is not none %}
+            <div class="kpi-value">{{ data.ratio_pct }}%</div>
+        {% elif data.get('rate_pct') is not none %}
+            <div class="kpi-value">{{ data.rate_pct }}%</div>
+        {% elif data.get('average') is not none %}
+            <div class="kpi-value">{{ data.average }}%</div>
+        {% endif %}
+    </div>
+    {% elif data is mapping and 'error' in data %}
+    <div class="kpi-card kpi-error">
+        <div class="kpi-label">{{ metric }}</div>
+        <div class="kpi-error-msg">{{ data.error }}</div>
+    </div>
+    {% endif %}
+{% endfor %}
+</div>
+
+<!-- Графики -->
+<div class="charts-grid">
+    {% if results.get('revenue') and results.revenue.get('monthly') %}
+    <div class="card chart-card">
+        <h3>Revenue по месяцам</h3>
+        <canvas id="chart-revenue"></canvas>
+    </div>
+    {% endif %}
+    {% if results.get('retention') and results.retention.get('monthly_avg') %}
+    <div class="card chart-card">
+        <h3>Retention Rate (%)</h3>
+        <canvas id="chart-retention"></canvas>
+    </div>
+    {% endif %}
+    {% if results.get('churn') and results.churn.get('monthly') %}
+    <div class="card chart-card">
+        <h3>Churn Rate (%)</h3>
+        <canvas id="chart-churn"></canvas>
+    </div>
+    {% endif %}
+    {% if results.get('dau_mau') and results.dau_mau.get('ratio_pct') %}
+    <div class="card chart-card">
+        <h3>DAU / MAU</h3>
+        <canvas id="chart-daumau"></canvas>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DATA = {{ results_json | safe }};
+
+function makeLine(id, labels, values) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{
+            data: values, borderColor: '#2980b9',
+            backgroundColor: '#2980b933', fill: true, tension: 0.3, pointRadius: 4
+        }]},
+        options: { responsive: true, plugins: { legend: { display: false } },
+                   scales: { y: { beginAtZero: true } } }
+    });
+}
+function makeBar(id, labels, values, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{
+            data: values, backgroundColor: color + '99', borderColor: color, borderWidth: 1
+        }]},
+        options: { responsive: true, plugins: { legend: { display: false } },
+                   scales: { y: { beginAtZero: true } } }
+    });
+}
+
+if (DATA.revenue && DATA.revenue.monthly)
+    makeLine('chart-revenue', Object.keys(DATA.revenue.monthly), Object.values(DATA.revenue.monthly));
+if (DATA.retention && DATA.retention.monthly_avg)
+    makeBar('chart-retention', Object.keys(DATA.retention.monthly_avg), Object.values(DATA.retention.monthly_avg), '#27ae60');
+if (DATA.churn && DATA.churn.monthly)
+    makeBar('chart-churn', Object.keys(DATA.churn.monthly), Object.values(DATA.churn.monthly), '#e74c3c');
+if (DATA.dau_mau && DATA.dau_mau.ratio_pct) {
+    const ctx = document.getElementById('chart-daumau');
+    if (ctx) {
+        const r = DATA.dau_mau.ratio_pct;
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: ['DAU/MAU', 'Остаток'],
+                datasets: [{ data: [r, 100-r], backgroundColor: ['#2980b9','#ecf0f1'], borderWidth: 0 }]},
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+}
+</script>
+{% endblock %}
