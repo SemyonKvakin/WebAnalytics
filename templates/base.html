@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MetricsApp{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+{% if user %}
+<nav class="navbar">
+    <a class="navbar-brand" href="{{ url_for('projects.index') }}">MetricsApp</a>
+    <div class="navbar-links">
+        <a href="{{ url_for('projects.index') }}">Проекты</a>
+        {% if user.role == 'admin' %}
+        <a href="{{ url_for('admin.users') }}">Пользователи</a>
+        {% endif %}
+        <span class="navbar-user">
+            {{ user.login }}
+            <span class="role-{{ user.role }}">{{ user.role }}</span>
+        </span>
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout">Выйти</a>
+    </div>
+</nav>
+{% endif %}
+
+<div class="flash-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+</div>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<footer>MetricsApp — анализ бизнес-метрик</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
