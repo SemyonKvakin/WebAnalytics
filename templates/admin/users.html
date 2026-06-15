@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Пользователи — MetricsApp{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Управление пользователями</h1>
+</div>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th width="50">№</th>
+                <th>Логин</th>
+                <th>Имя</th>
+                <th width="120">Роль</th>
+                <th width="140">Дата регистрации</th>
+                <th width="220">Изменить роль</th>
+                <th width="80">Удалить</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ u.login }}</td>
+            <td>
+                {{ [u.last_name, u.first_name] | select | join(' ') or '—' }}
+            </td>
+            <td>
+                <span class="role-{{ u.role }}">{{ u.role }}</span>
+            </td>
+            <td class="text-muted">{{ u.created_at.strftime('%d.%m.%Y') }}</td>
+            <td>
+                <form method="POST"
+                      action="{{ url_for('admin.change_role', user_id=u.id) }}"
+                      style="display:flex;gap:6px">
+                    <select name="role" class="select-sm">
+                        <option value="admin"   {% if u.role == 'admin'   %}selected{% endif %}>admin</option>
+                        <option value="analyst" {% if u.role == 'analyst' %}selected{% endif %}>analyst</option>
+                        <option value="viewer"  {% if u.role == 'viewer'  %}selected{% endif %}>viewer</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-sm">Сохранить</button>
+                </form>
+            </td>
+            <td>
+                {% if u.id != user.sub %}
+                <form method="POST"
+                      action="{{ url_for('admin.delete_user', user_id=u.id) }}"
+                      onsubmit="return confirm('Удалить пользователя {{ u.login }}?')">
+                    <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                </form>
+                {% else %}
+                <span class="text-muted">(вы)</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
