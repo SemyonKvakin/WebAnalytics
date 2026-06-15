@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Новый проект — MetricsApp{% endblock %}
+{% block content %}
+<a href="{{ url_for('projects.index') }}" class="back-link">← Проекты</a>
+<div class="page-header">
+    <h1>Новый проект</h1>
+</div>
+<div class="card" style="max-width: 560px;">
+    <form method="POST">
+        <div class="form-group">
+            <label>Название <span style="color:red">*</span></label>
+            <input type="text" name="name"
+                   placeholder="Например: Анализ продаж Q1 2024" required autofocus>
+        </div>
+        <div class="form-group">
+            <label>Описание <span class="optional">(необязательно)</span></label>
+            <textarea name="description" rows="3"
+                      placeholder="Краткое описание проекта..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+            <button type="submit" class="btn btn-success">Создать</button>
+            <a href="{{ url_for('projects.index') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

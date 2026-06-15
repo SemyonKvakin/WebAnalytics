@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Мои проекты — MetricsApp{% endblock %}
+{% block content %}
+<div class="page-actions">
+    <h1 style="margin-right: 16px;">Мои проекты</h1>
+    {% if user.role in ('admin', 'analyst') %}
+    <a href="{{ url_for('projects.create') }}" class="btn btn-success">+ Новый проект</a>
+    {% endif %}
+</div>
+
+{% if projects %}
+<div class="projects-grid">
+    {% for p in projects %}
+    <div class="project-card">
+        <div class="project-card-header">
+            <h3>{{ p.name }}</h3>
+            <form method="POST" action="{{ url_for('projects.delete', project_id=p.id) }}"
+                  onsubmit="return confirm('Удалить проект «{{ p.name }}»?')">
+                <button type="submit" class="btn-icon" title="Удалить">x</button>
+            </form>
+        </div>
+        {% if p.description %}
+        <p class="project-desc">{{ p.description }}</p>
+        {% else %}
+        <p class="project-desc text-muted">Без описания</p>
+        {% endif %}
+        <div class="project-meta">
+            <span>{{ stats[p.id].datasets }} датасетов</span>
+            <span>{{ stats[p.id].reports }} отчётов</span>
+            <span class="project-date">{{ p.created_at.strftime('%d.%m.%Y') }}</span>
+        </div>
+        <div class="project-actions">
+            {% if user.role in ('admin', 'analyst') %}
+            <a href="{{ url_for('datasets.upload', project_id=p.id) }}"
+               class="btn btn-primary btn-sm">Загрузить данные</a>
+            {% endif %}
+            <a href="{{ url_for('metrics.reports_list', project_id=p.id) }}"
+               class="btn btn-secondary btn-sm">Отчёты</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        Проектов пока нет.
+        {% if user.role in ('admin', 'analyst') %}
+        <br><a href="{{ url_for('projects.create') }}">Создать первый проект</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+
+{% endblock %}
