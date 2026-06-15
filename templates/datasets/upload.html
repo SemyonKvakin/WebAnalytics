@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Загрузка данных — {{ project.name }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('projects.index') }}" class="back-link">← Проекты</a>
+<div class="page-header">
+    <h1>{{ project.name }}</h1>
+    <p class="page-subtitle">Загрузите файл с данными для анализа</p>
+</div>
+
+<div class="card" style="max-width: 680px;">
+    <div class="card-header">Загрузить новый файл</div>
+    <form method="POST" enctype="multipart/form-data" id="upload-form">
+        <div class="drop-zone" id="drop-zone">
+            <div class="drop-zone-icon">^</div>
+            <p class="drop-zone-text">Перетащите файл сюда</p>
+            <p class="drop-zone-sub">или</p>
+            <label class="btn btn-secondary">
+                Выбрать файл
+                <input type="file" name="file" id="file-input"
+                       accept=".csv,.json" style="display:none" required>
+            </label>
+            <p class="drop-zone-formats">Поддерживаемые форматы: CSV, JSON</p>
+        </div>
+        <div id="file-info" class="file-info hidden" style="margin-top: 20px;">
+            <span id="file-name" style="margin-right: 16px;"></span>
+            <button type="submit" class="btn btn-primary">
+                Загрузить и выбрать метрики
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if datasets %}
+<div class="card">
+    <div class="card-header">Загруженные датасеты</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Файл</th>
+                <th>Строк</th>
+                <th>Столбцы</th>
+                <th>Дата</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for ds in datasets %}
+        <tr>
+            <td>{{ ds.filename }}</td>
+            <td>{{ ds.row_count }}</td>
+            <td>
+                {% if ds.columns %}
+                    {% for col in ds.columns.split(',') %}
+                        <span class="col-tag">{{ col }}</span>
+                    {% endfor %}
+                {% else %}—{% endif %}
+            </td>
+            <td class="text-muted">{{ ds.uploaded_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>
+                <a href="{{ url_for('metrics.select', project_id=project.id, dataset_id=ds.id) }}"
+                   class="btn btn-secondary btn-sm">Выбрать метрики</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileInfo  = document.getElementById('file-info');
+const fileName  = document.getElementById('file-name');
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) {
+        fileName.textContent = fileInput.files[0].name;
+        fileInfo.classList.remove('hidden');
+    }
+});
+dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) {
+        fileInput.files = e.dataTransfer.files;
+        fileName.textContent = f.name;
+        fileInfo.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}
