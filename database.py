@@ -1,11 +1,22 @@
+import os
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
-DATABASE_URL = "postgresql+psycopg://postgres:123@localhost:5432/metrics_db"
 
-engine = create_engine(DATABASE_URL)
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql+psycopg://postgres:123@localhost:5432/metrics_db",
+)
+
+
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

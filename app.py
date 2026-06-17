@@ -1,4 +1,5 @@
 from flask import Flask, redirect, url_for
+import os
 from database import engine, Base
 from blueprints.auth_bp     import auth_bp
 from blueprints.projects_bp import projects_bp
@@ -9,7 +10,7 @@ from blueprints.admin_bp    import admin_bp
 Base.metadata.create_all(bind=engine)
 
 app = Flask(__name__)
-app.secret_key = "metrics_flask_secret_2024"
+app.secret_key = os.environ.get("SECRET_KEY", "metrics_flask_secret_2024")
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(projects_bp)

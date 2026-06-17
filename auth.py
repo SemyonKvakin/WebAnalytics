@@ -1,10 +1,11 @@
+import os
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import request, redirect, url_for, flash
 from functools import wraps
 
-SECRET_KEY = "metrics_secret_key_change_in_production"
+SECRET_KEY = os.environ.get("SECRET_KEY", "metrics_secret_key_change_in_production")
 ALGORITHM  = "HS256"
 TOKEN_TTL  = 60 * 8
 
