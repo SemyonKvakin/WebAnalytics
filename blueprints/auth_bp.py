@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
 from database import SessionLocal, User
 from auth import hash_password, verify_password, create_token, get_current_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -53,7 +53,7 @@ def register():
                 password_hash=hash_password(password),
                 first_name=first_name,
                 role="viewer",
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.add(user)
             db.commit()

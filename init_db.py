@@ -1,6 +1,6 @@
 from database import engine, Base, SessionLocal, User
 from auth import hash_password
-from datetime import datetime
+from datetime import datetime, timezone
 
 Base.metadata.create_all(bind=engine)
 print("Таблицы созданы.")
@@ -14,7 +14,7 @@ try:
             password_hash=hash_password("Admin123!"),
             first_name="Администратор",
             role="admin",
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
         )
         db.add(admin)
         db.commit()

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import request, redirect, url_for, flash
@@ -19,7 +19,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_token(data: dict) -> str:
     payload = data.copy()
-    payload["exp"] = datetime.utcnow() + timedelta(minutes=TOKEN_TTL)
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_TTL)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 

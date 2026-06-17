@@ -7,7 +7,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from sqlalchemy import text
 from database import SessionLocal, engine, Project, Dataset, Report
 from auth import login_required, roles_required, get_current_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 metrics_bp = Blueprint("metrics", __name__, url_prefix="/projects")
 
@@ -266,7 +266,7 @@ def select(project_id, dataset_id):
                 project_id=project_id,
                 metrics=selected,
                 result_json=results,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.add(report)
             db.commit()

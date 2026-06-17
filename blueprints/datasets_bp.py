@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from database import SessionLocal, Project, Dataset
 from auth import roles_required, get_current_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 datasets_bp = Blueprint("datasets", __name__, url_prefix="/projects")
 
@@ -68,7 +68,7 @@ def upload(project_id):
                 file_path=file_path,
                 row_count=row_count,
                 columns=columns,
-                uploaded_at=datetime.utcnow(),
+                uploaded_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.add(dataset)
             db.commit()

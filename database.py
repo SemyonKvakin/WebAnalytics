@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
@@ -28,7 +28,7 @@ class User(Base):
     first_name    = Column(String(100), nullable=False)
     middle_name   = Column(String(100), nullable=True)
     role          = Column(String(20),  nullable=False, default="analyst")
-    created_at    = Column(DateTime, default=datetime.utcnow)
+    created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     projects = relationship("Project", back_populates="owner", cascade="all, delete")
 
@@ -40,7 +40,7 @@ class Project(Base):
     user_id     = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     name        = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    created_at  = Column(DateTime, default=datetime.utcnow)
+    created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     owner    = relationship("User", back_populates="projects")
     datasets = relationship("Dataset", back_populates="project", cascade="all, delete")
@@ -57,7 +57,7 @@ class Dataset(Base):
     file_path   = Column(Text, nullable=False)
     row_count   = Column(Integer, default=0)
     columns     = Column(Text, nullable=True)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    uploaded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     project = relationship("Project", back_populates="datasets")
     reports = relationship("Report",  back_populates="dataset", cascade="all, delete")
@@ -71,7 +71,7 @@ class Report(Base):
     project_id  = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     metrics     = Column(JSON, nullable=False)
     result_json = Column(JSON, nullable=False, default=dict)
-    created_at  = Column(DateTime, default=datetime.utcnow)
+    created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     dataset = relationship("Dataset", back_populates="reports")
     project = relationship("Project", back_populates="reports")

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from database import SessionLocal, Project, Dataset, Report
 from auth import login_required, roles_required, get_current_user
-from datetime import datetime
+from datetime import datetime, timezone
 
 projects_bp = Blueprint("projects", __name__, url_prefix="/projects")
 
@@ -44,7 +44,7 @@ def create():
                 user_id=user["sub"],
                 name=name,
                 description=description or None,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.add(project)
             db.commit()
